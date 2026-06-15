@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk JSON Converter - Email:Password & Phone (With + Sign)</title>
+    <title>Bulk JSON Converter - Auto Replace Phone Numbers</title>
     <style>
         * {
             margin: 0;
@@ -29,6 +29,31 @@
             text-align: center;
             color: #aaa;
             margin-bottom: 30px;
+        }
+        .feature-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #e94560;
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: #e94560;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
         }
         .dual-section {
             display: flex;
@@ -61,17 +86,25 @@
             resize: vertical;
             margin-bottom: 15px;
         }
-        .section textarea:focus {
-            outline: none;
-            border-color: #ff6b6b;
+        .file-upload {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
         }
-        .example {
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #888;
+        .file-upload label {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .file-upload input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            background: #1a1a2e;
+            color: #0f0;
         }
         .action-buttons {
             display: flex;
@@ -154,48 +187,110 @@
 <body>
     <div class="container">
         <h1>📧 Bulk JSON Converter</h1>
-        <div class="subtitle">Email:Password aur Phone Numbers - Phone ke aage + sign automatically lag jayega</div>
+        <div class="subtitle">Manual Paste | File Upload & Auto Replace Phone Numbers</div>
 
-        <div class="dual-section">
-            <div class="section">
-                <h2>📧 Email:Password</h2>
-                <textarea id="emailPasswordInput" rows="10" placeholder="Paste email:password pairs here...
+        <!-- Tabs -->
+        <div class="feature-tabs">
+            <button class="tab-btn active" onclick="switchTab('manual')">📝 Manual Paste</button>
+            <button class="tab-btn" onclick="switchTab('file')">📂 File Upload & Replace</button>
+        </div>
+
+        <!-- Tab 1: Manual Paste (Old Feature) -->
+        <div id="manualTab" class="tab-content active">
+            <div class="dual-section">
+                <div class="section">
+                    <h2>📧 Email:Password</h2>
+                    <textarea id="emailPasswordInput" rows="10" placeholder="Paste email:password pairs here...
 Example:
 user1@gmail.com:pass123
 user2@yahoo.com:mypass456"></textarea>
-                <div class="example">💡 Format: email:password (ek line per record)</div>
-            </div>
-            <div class="section">
-                <h2>📱 Phone Numbers</h2>
-                <textarea id="phoneInput" rows="10" placeholder="Paste phone numbers here...
+                    <div class="example">💡 Format: email:password (ek line per record)</div>
+                </div>
+                <div class="section">
+                    <h2>📱 Phone Numbers</h2>
+                    <textarea id="phoneInput" rows="10" placeholder="Paste phone numbers here...
 Example:
 255712252566
 255702128335"></textarea>
-                <div class="example">💡 Format: Ek number per line (digits only) → Output mein + lagega: +255712252566</div>
+                    <div class="example">💡 Format: Ek number per line → Output mein + lagega</div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button id="convertBtn">🔄 Convert to JSON</button>
+                <button id="copyBtn">📋 Copy JSON</button>
+                <button id="downloadBtn">💾 Download JSON</button>
+                <button id="clearBtn">🗑️ Clear All</button>
             </div>
         </div>
 
-        <div class="action-buttons">
-            <button id="convertBtn">🔄 Convert to JSON</button>
-            <button id="copyBtn">📋 Copy JSON</button>
-            <button id="downloadBtn">💾 Download JSON</button>
-            <button id="clearBtn">🗑️ Clear All</button>
+        <!-- Tab 2: File Upload & Replace (New Feature) -->
+        <div id="fileTab" class="tab-content">
+            <div class="dual-section">
+                <div class="section">
+                    <h2>📁 Upload Old JSON File</h2>
+                    <div class="file-upload">
+                        <label>Select JSON File (.json):</label>
+                        <input type="file" id="jsonFileInput" accept=".json">
+                    </div>
+                    <div class="example">💡 Old JSON file jisme phone numbers replace karne hain</div>
+                    <div id="jsonPreview" style="background:#1a1a2e; padding:10px; border-radius:8px; margin-top:10px; max-height:200px; overflow:auto; font-size:11px; color:#0f0;"></div>
+                </div>
+                <div class="section">
+                    <h2>📱 Upload New Phone Numbers (.txt)</h2>
+                    <div class="file-upload">
+                        <label>Select Text File (.txt):</label>
+                        <input type="file" id="phoneFileInput" accept=".txt">
+                    </div>
+                    <div class="example">💡 Ek number per line wala text file</div>
+                    <div id="phonePreview" style="background:#1a1a2e; padding:10px; border-radius:8px; margin-top:10px; max-height:200px; overflow:auto; font-size:11px; color:#0f0;"></div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button id="replaceBtn">🔄 Replace & Generate JSON</button>
+                <button id="downloadUpdatedBtn">💾 Download Updated JSON</button>
+                <button id="clearFileBtn">🗑️ Clear Files</button>
+            </div>
         </div>
 
         <div class="output-section">
             <h3>📄 Output JSON (Array Format):</h3>
             <div id="output" class="output-area">// JSON output yaha dikhega</div>
             <div id="status"></div>
-            <div class="note">📌 Note: Phone numbers ke aage automatically "+" sign add ho jayega</div>
+            <div class="note">📌 Phone numbers ke aage automatically "+" sign add ho jayega</div>
         </div>
     </div>
 
     <script>
+        // DOM Elements
         const emailPasswordInput = document.getElementById('emailPasswordInput');
         const phoneInput = document.getElementById('phoneInput');
         const outputDiv = document.getElementById('output');
         const statusDiv = document.getElementById('status');
 
+        // File upload elements
+        const jsonFileInput = document.getElementById('jsonFileInput');
+        const phoneFileInput = document.getElementById('phoneFileInput');
+        const jsonPreview = document.getElementById('jsonPreview');
+        const phonePreview = document.getElementById('phonePreview');
+
+        let uploadedJsonData = null;
+        let uploadedPhoneNumbers = [];
+
+        // Tab Switching
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tab === 'manual') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('manualTab').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('fileTab').classList.add('active');
+            }
+        }
+
+        // ============ MANUAL TAB FUNCTIONS (Old Features - No Changes) ============
         function convertToJSON() {
             const emailPasswordText = emailPasswordInput.value;
             const phoneText = phoneInput.value;
@@ -206,14 +301,12 @@ Example:
                 return;
             }
 
-            // Parse Email:Password
             const lines = emailPasswordText.split('\n');
             const emailPasswordPairs = [];
 
             for (let line of lines) {
                 line = line.trim();
                 if (line === '') continue;
-
                 if (line.includes(':')) {
                     const parts = line.split(':');
                     if (parts.length >= 2) {
@@ -223,10 +316,7 @@ Example:
                         });
                     }
                 } else if (line.includes('@')) {
-                    emailPasswordPairs.push({
-                        email: line.trim(),
-                        password: ""
-                    });
+                    emailPasswordPairs.push({ email: line.trim(), password: "" });
                 }
             }
 
@@ -236,83 +326,63 @@ Example:
                 return;
             }
 
-            // Parse Phone Numbers and add + sign
             const phoneLines = phoneText.split('\n');
             const phoneNumbers = [];
-
             for (let line of phoneLines) {
                 line = line.trim();
                 if (line === '') continue;
-                
-                // Remove all non-digits
                 let cleanPhone = line.replace(/\D/g, '');
-                
                 if (cleanPhone.length >= 7) {
-                    // Add + sign before the number
-                    let phoneWithPlus = '+' + cleanPhone;
-                    phoneNumbers.push(phoneWithPlus);
+                    phoneNumbers.push('+' + cleanPhone);
                 }
             }
 
-            // Combine into JSON array
             const jsonArray = [];
             for (let i = 0; i < emailPasswordPairs.length; i++) {
                 jsonArray.push({
                     email: emailPasswordPairs[i].email,
                     password: emailPasswordPairs[i].password,
-                    phone: phoneNumbers[i] || ""  // If no phone, empty string
+                    phone: phoneNumbers[i] || ""
                 });
             }
 
             const jsonOutput = JSON.stringify(jsonArray, null, 2);
             outputDiv.textContent = jsonOutput;
-
             const phoneCount = jsonArray.filter(item => item.phone !== "").length;
-            statusDiv.innerHTML = `<div class="status success">✅ Converted ${jsonArray.length} records!<br>📊 ${phoneCount} have phone numbers (with + sign), ${jsonArray.length - phoneCount} without phone.</div>`;
-            
-            return jsonOutput;
+            statusDiv.innerHTML = `<div class="status success">✅ Converted ${jsonArray.length} records!<br>📊 ${phoneCount} have phone numbers (with + sign)</div>`;
         }
 
         function copyToClipboard() {
             const outputText = outputDiv.textContent;
-            if (!outputText || outputText.includes('// No email') || outputText.includes('// No valid') || outputText === '// JSON output yaha dikhega') {
+            if (!outputText || outputText.includes('// No')) {
                 statusDiv.innerHTML = '<div class="status error">❌ Nothing to copy! Convert data first.</div>';
                 return;
             }
-            
             navigator.clipboard.writeText(outputText).then(() => {
                 statusDiv.innerHTML = '<div class="status success">📋 JSON copied to clipboard!</div>';
-            }).catch(() => {
-                statusDiv.innerHTML = '<div class="status error">❌ Failed to copy</div>';
             });
         }
 
         function downloadJSON() {
             const outputText = outputDiv.textContent;
-            
-            if (!outputText || outputText.includes('// No email') || outputText.includes('// No valid') || outputText === '// JSON output yaha dikhega') {
+            if (!outputText || outputText.includes('// No')) {
                 statusDiv.innerHTML = '<div class="status error">❌ No JSON to download! Convert data first.</div>';
                 return;
             }
-
-            try {
-                JSON.parse(outputText);
-            } catch(e) {
-                statusDiv.innerHTML = '<div class="status error">❌ Invalid JSON format! Please convert again.</div>';
+            try { JSON.parse(outputText); } catch(e) {
+                statusDiv.innerHTML = '<div class="status error">❌ Invalid JSON format!</div>';
                 return;
             }
-
             const blob = new Blob([outputText], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `data_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+            a.download = `data_${Date.now()}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
-            statusDiv.innerHTML = '<div class="status success">💾 JSON file downloaded successfully!</div>';
+            statusDiv.innerHTML = '<div class="status success">💾 JSON file downloaded!</div>';
         }
 
         function clearAll() {
@@ -322,10 +392,127 @@ Example:
             statusDiv.innerHTML = '';
         }
 
+        // ============ FILE UPLOAD & REPLACE FUNCTIONS (New Feature) ============
+        
+        // Load JSON file
+        jsonFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const content = event.target.result;
+                    uploadedJsonData = JSON.parse(content);
+                    jsonPreview.innerHTML = `<strong>✅ Loaded:</strong> ${uploadedJsonData.length} records<br><pre style="font-size:10px; margin-top:5px;">${JSON.stringify(uploadedJsonData.slice(0, 3), null, 2)}${uploadedJsonData.length > 3 ? '\n...' : ''}</pre>`;
+                    statusDiv.innerHTML = `<div class="status success">✅ JSON file loaded! ${uploadedJsonData.length} records found.</div>`;
+                } catch(err) {
+                    jsonPreview.innerHTML = '<span style="color:#f00;">❌ Invalid JSON file</span>';
+                    uploadedJsonData = null;
+                    statusDiv.innerHTML = '<div class="status error">❌ Invalid JSON file!</div>';
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Load Phone numbers TXT file
+        phoneFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const content = event.target.result;
+                const lines = content.split('\n');
+                uploadedPhoneNumbers = [];
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (line === '') continue;
+                    let cleanPhone = line.replace(/\D/g, '');
+                    if (cleanPhone.length >= 7) {
+                        uploadedPhoneNumbers.push('+' + cleanPhone);
+                    }
+                }
+                
+                phonePreview.innerHTML = `<strong>✅ Loaded:</strong> ${uploadedPhoneNumbers.length} phone numbers<br><pre style="font-size:10px; margin-top:5px;">${uploadedPhoneNumbers.slice(0, 10).join('\n')}${uploadedPhoneNumbers.length > 10 ? '\n...' : ''}</pre>`;
+                statusDiv.innerHTML = `<div class="status success">✅ Phone numbers loaded! ${uploadedPhoneNumbers.length} numbers found.</div>`;
+            };
+            reader.readAsText(file);
+        });
+
+        // Replace Phone Numbers in JSON
+        function replaceAndGenerate() {
+            if (!uploadedJsonData) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please upload a JSON file first!</div>';
+                return;
+            }
+            
+            if (uploadedPhoneNumbers.length === 0) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please upload a phone numbers text file first!</div>';
+                return;
+            }
+            
+            // Create updated JSON by replacing phone numbers
+            const updatedJson = JSON.parse(JSON.stringify(uploadedJsonData)); // Deep copy
+            
+            let replacedCount = 0;
+            for (let i = 0; i < updatedJson.length && i < uploadedPhoneNumbers.length; i++) {
+                if (updatedJson[i]) {
+                    updatedJson[i].phone = uploadedPhoneNumbers[i];
+                    replacedCount++;
+                }
+            }
+            
+            const jsonOutput = JSON.stringify(updatedJson, null, 2);
+            outputDiv.textContent = jsonOutput;
+            statusDiv.innerHTML = `<div class="status success">✅ Replaced ${replacedCount} phone numbers successfully!<br>📊 Total records: ${updatedJson.length}</div>`;
+            
+            return updatedJson;
+        }
+        
+        // Download Updated JSON
+        function downloadUpdatedJSON() {
+            const outputText = outputDiv.textContent;
+            if (!outputText || outputText.includes('//')) {
+                statusDiv.innerHTML = '<div class="status error">❌ No JSON to download! Click "Replace & Generate" first.</div>';
+                return;
+            }
+            try { JSON.parse(outputText); } catch(e) {
+                statusDiv.innerHTML = '<div class="status error">❌ Invalid JSON format!</div>';
+                return;
+            }
+            const blob = new Blob([outputText], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `updated_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            statusDiv.innerHTML = '<div class="status success">💾 Updated JSON file downloaded!</div>';
+        }
+        
+        function clearFiles() {
+            jsonFileInput.value = '';
+            phoneFileInput.value = '';
+            jsonPreview.innerHTML = '';
+            phonePreview.innerHTML = '';
+            uploadedJsonData = null;
+            uploadedPhoneNumbers = [];
+            statusDiv.innerHTML = '<div class="status success">🗑️ Files cleared!</div>';
+        }
+
+        // Attach event listeners
         document.getElementById('convertBtn').addEventListener('click', convertToJSON);
         document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
         document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
         document.getElementById('clearBtn').addEventListener('click', clearAll);
+        
+        document.getElementById('replaceBtn').addEventListener('click', replaceAndGenerate);
+        document.getElementById('downloadUpdatedBtn').addEventListener('click', downloadUpdatedJSON);
+        document.getElementById('clearFileBtn').addEventListener('click', clearFiles);
     </script>
 </body>
 </html>
