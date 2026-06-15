@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk JSON Converter - Email:Password & Phone</title>
+    <title>Bulk JSON Converter - Email:Password & Phone (With + Sign)</title>
     <style>
         * {
             margin: 0;
@@ -135,6 +135,15 @@
             color: #f00;
             border: 1px solid #f00;
         }
+        .note {
+            background: rgba(255,255,0,0.1);
+            color: #ff0;
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            text-align: center;
+        }
         @media (max-width: 768px) {
             .dual-section {
                 flex-direction: column;
@@ -145,7 +154,7 @@
 <body>
     <div class="container">
         <h1>📧 Bulk JSON Converter</h1>
-        <div class="subtitle">Email:Password aur Phone Numbers - Alag Alag Sections</div>
+        <div class="subtitle">Email:Password aur Phone Numbers - Phone ke aage + sign automatically lag jayega</div>
 
         <div class="dual-section">
             <div class="section">
@@ -162,7 +171,7 @@ user2@yahoo.com:mypass456"></textarea>
 Example:
 255712252566
 255702128335"></textarea>
-                <div class="example">💡 Format: Ek number per line (digits only)</div>
+                <div class="example">💡 Format: Ek number per line (digits only) → Output mein + lagega: +255712252566</div>
             </div>
         </div>
 
@@ -177,11 +186,11 @@ Example:
             <h3>📄 Output JSON (Array Format):</h3>
             <div id="output" class="output-area">// JSON output yaha dikhega</div>
             <div id="status"></div>
+            <div class="note">📌 Note: Phone numbers ke aage automatically "+" sign add ho jayega</div>
         </div>
     </div>
 
     <script>
-        // Get DOM elements
         const emailPasswordInput = document.getElementById('emailPasswordInput');
         const phoneInput = document.getElementById('phoneInput');
         const outputDiv = document.getElementById('output');
@@ -227,16 +236,21 @@ Example:
                 return;
             }
 
-            // Parse Phone Numbers
+            // Parse Phone Numbers and add + sign
             const phoneLines = phoneText.split('\n');
             const phoneNumbers = [];
 
             for (let line of phoneLines) {
                 line = line.trim();
                 if (line === '') continue;
+                
+                // Remove all non-digits
                 let cleanPhone = line.replace(/\D/g, '');
+                
                 if (cleanPhone.length >= 7) {
-                    phoneNumbers.push(cleanPhone);
+                    // Add + sign before the number
+                    let phoneWithPlus = '+' + cleanPhone;
+                    phoneNumbers.push(phoneWithPlus);
                 }
             }
 
@@ -246,7 +260,7 @@ Example:
                 jsonArray.push({
                     email: emailPasswordPairs[i].email,
                     password: emailPasswordPairs[i].password,
-                    phone: phoneNumbers[i] || ""
+                    phone: phoneNumbers[i] || ""  // If no phone, empty string
                 });
             }
 
@@ -254,7 +268,7 @@ Example:
             outputDiv.textContent = jsonOutput;
 
             const phoneCount = jsonArray.filter(item => item.phone !== "").length;
-            statusDiv.innerHTML = `<div class="status success">✅ Converted ${jsonArray.length} records!<br>📊 ${phoneCount} have phone numbers, ${jsonArray.length - phoneCount} without phone.</div>`;
+            statusDiv.innerHTML = `<div class="status success">✅ Converted ${jsonArray.length} records!<br>📊 ${phoneCount} have phone numbers (with + sign), ${jsonArray.length - phoneCount} without phone.</div>`;
             
             return jsonOutput;
         }
@@ -276,21 +290,18 @@ Example:
         function downloadJSON() {
             const outputText = outputDiv.textContent;
             
-            // Check if output is valid JSON
             if (!outputText || outputText.includes('// No email') || outputText.includes('// No valid') || outputText === '// JSON output yaha dikhega') {
                 statusDiv.innerHTML = '<div class="status error">❌ No JSON to download! Convert data first.</div>';
                 return;
             }
 
-            // Validate if it's proper JSON
             try {
-                JSON.parse(outputText); // Check if valid JSON
+                JSON.parse(outputText);
             } catch(e) {
                 statusDiv.innerHTML = '<div class="status error">❌ Invalid JSON format! Please convert again.</div>';
                 return;
             }
 
-            // Create and trigger download
             const blob = new Blob([outputText], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -311,7 +322,6 @@ Example:
             statusDiv.innerHTML = '';
         }
 
-        // Attach event listeners
         document.getElementById('convertBtn').addEventListener('click', convertToJSON);
         document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
         document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
