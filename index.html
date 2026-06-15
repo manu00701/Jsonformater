@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk JSON Converter - Email:Password & Phone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+        .dual-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .section h2 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        .section textarea {
+            width: 100%;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 13px;
+            background: #1a1a2e;
+            color: #0f0;
+            border: 2px solid #e94560;
+            border-radius: 10px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+        .section textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+        .example {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #888;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        button {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        .output-section {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+        }
+        .output-section h3 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        .output-area {
+            background: #1a1a2e;
+            color: #0f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e94560;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success {
+            background: rgba(0,255,0,0.2);
+            color: #0f0;
+            border: 1px solid #0f0;
+        }
+        .error {
+            background: rgba(255,0,0,0.2);
+            color: #f00;
+            border: 1px solid #f00;
+        }
+        @media (max-width: 768px) {
+            .dual-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Bulk JSON Converter</h1>
+        <div class="subtitle">Email:Password aur Phone Numbers - Alag Alag Sections</div>
+
+        <div class="dual-section">
+            <div class="section">
+                <h2>📧 Email:Password</h2>
+                <textarea id="emailPasswordInput" rows="10" placeholder="Paste email:password pairs here...
+Example:
+user1@gmail.com:pass123
+user2@yahoo.com:mypass456"></textarea>
+                <div class="example">💡 Format: email:password (ek line per record)</div>
+            </div>
+            <div class="section">
+                <h2>📱 Phone Numbers</h2>
+                <textarea id="phoneInput" rows="10" placeholder="Paste phone numbers here...
+Example:
+255712252566
+255702128335"></textarea>
+                <div class="example">💡 Format: Ek number per line (digits only)</div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button id="convertBtn">🔄 Convert to JSON</button>
+            <button id="copyBtn">📋 Copy JSON</button>
+            <button id="downloadBtn">💾 Download JSON</button>
+            <button id="clearBtn">🗑️ Clear All</button>
+        </div>
+
+        <div class="output-section">
+            <h3>📄 Output JSON (Array Format):</h3>
+            <div id="output" class="output-area">// JSON output yaha dikhega</div>
+            <div id="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const emailPasswordInput = document.getElementById('emailPasswordInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const outputDiv = document.getElementById('output');
+        const statusDiv = document.getElementById('status');
+
+        function convertToJSON() {
+            const emailPasswordText = emailPasswordInput.value;
+            const phoneText = phoneInput.value;
+
+            if (!emailPasswordText.trim()) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please paste Email:Password data first!</div>';
+                outputDiv.textContent = '// No email:password data found';
+                return;
+            }
+
+            // Parse Email:Password
+            const lines = emailPasswordText.split('\n');
+            const emailPasswordPairs = [];
+
+            for (let line of lines) {
+                line = line.trim();
+                if (line === '') continue;
+
+                if (line.includes(':')) {
+                    const parts = line.split(':');
+                    if (parts.length >= 2) {
+                        emailPasswordPairs.push({
+                            email: parts[0].trim(),
+                            password: parts.slice(1).join(':').trim()
+                        });
+                    }
+                } else if (line.includes('@')) {
+                    emailPasswordPairs.push({
+                        email: line.trim(),
+                        password: ""
+                    });
+                }
+            }
+
+            if (emailPasswordPairs.length === 0) {
+                statusDiv.innerHTML = '<div class="status error">❌ No valid email:password pairs found!</div>';
+                outputDiv.textContent = '// No valid data found';
+                return;
+            }
+
+            // Parse Phone Numbers
+            const phoneLines = phoneText.split('\n');
+            const phoneNumbers = [];
+
+            for (let line of phoneLines) {
+                line = line.trim();
+                if (line === '') continue;
+                let cleanPhone = line.replace(/\D/g, '');
+                if (cleanPhone.length >= 7) {
+                    phoneNumbers.push(cleanPhone);
+                }
+            }
+
+            // Combine into JSON array
+            const jsonArray = [];
+            for (let i = 0; i < emailPasswordPairs.length; i++) {
+                jsonArray.push({
+                    email: emailPasswordPairs[i].email,
+                    password: emailPasswordPairs[i].password,
+                    phone: phoneNumbers[i] || ""
+                });
+            }
+
+            const jsonOutput = JSON.stringify(jsonArray, null, 2);
+            outputDiv.textContent = jsonOutput;
+
+            const phoneCount = jsonArray.filter(item => item.phone !== "").length;
+            statusDiv.innerHTML = `<div class="status success">✅ Converted ${jsonArray.length} records!<br>📊 ${phoneCount} have phone numbers, ${jsonArray.length - phoneCount} without phone.</div>`;
+            
+            return jsonOutput;
+        }
+
+        function copyToClipboard() {
+            const outputText = outputDiv.textContent;
+            if (!outputText || outputText.includes('// No email') || outputText.includes('// No valid') || outputText === '// JSON output yaha dikhega') {
+                statusDiv.innerHTML = '<div class="status error">❌ Nothing to copy! Convert data first.</div>';
+                return;
+            }
+            
+            navigator.clipboard.writeText(outputText).then(() => {
+                statusDiv.innerHTML = '<div class="status success">📋 JSON copied to clipboard!</div>';
+            }).catch(() => {
+                statusDiv.innerHTML = '<div class="status error">❌ Failed to copy</div>';
+            });
+        }
+
+        function downloadJSON() {
+            const outputText = outputDiv.textContent;
+            
+            // Check if output is valid JSON
+            if (!outputText || outputText.includes('// No email') || outputText.includes('// No valid') || outputText === '// JSON output yaha dikhega') {
+                statusDiv.innerHTML = '<div class="status error">❌ No JSON to download! Convert data first.</div>';
+                return;
+            }
+
+            // Validate if it's proper JSON
+            try {
+                JSON.parse(outputText); // Check if valid JSON
+            } catch(e) {
+                statusDiv.innerHTML = '<div class="status error">❌ Invalid JSON format! Please convert again.</div>';
+                return;
+            }
+
+            // Create and trigger download
+            const blob = new Blob([outputText], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `data_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            statusDiv.innerHTML = '<div class="status success">💾 JSON file downloaded successfully!</div>';
+        }
+
+        function clearAll() {
+            emailPasswordInput.value = '';
+            phoneInput.value = '';
+            outputDiv.textContent = '// JSON output yaha dikhega';
+            statusDiv.innerHTML = '';
+        }
+
+        // Attach event listeners
+        document.getElementById('convertBtn').addEventListener('click', convertToJSON);
+        document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+        document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
+        document.getElementById('clearBtn').addEventListener('click', clearAll);
+    </script>
+</body>
+</html>
